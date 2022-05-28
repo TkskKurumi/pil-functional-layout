@@ -476,6 +476,11 @@ class Text(Widget):
 
 class AvatarCircle(Widget):
     def __init__(self, content, size=None, bg=None):
+        """
+            content: Image, Widget, or Callable(kwargs)
+            size: Avatar size, w=h=size
+            bg: Color
+        """
         self.size = size
         self.content = content
         self.bg = bg
@@ -698,7 +703,7 @@ class gif(Widget):
         return _render_content(frames[idx])
 
 
-class progressBar(Widget):
+class ProgressBar(Widget):
     def __init__(self, width, bg=None, fill=None, height=None, progress=None, borderColor=None, resizeMethod=resize.cropWH, borderWidth=None):
         self.bg = bg
         self.fill = fill
