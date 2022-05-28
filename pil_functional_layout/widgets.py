@@ -144,7 +144,7 @@ class Column(Widget):
     def get_rendered_contents(self, **kwargs):
         if(self.width):
             for i in self.contents:
-                if(isinstance(i, row)):
+                if(isinstance(i, Row)):
                     if(i.width is None):
                         i.width = self.width
         return super().get_rendered_contents(**kwargs)
@@ -213,7 +213,7 @@ class SizeBox(Widget):
     def render(self, **kwargs):
         ret = _render_content(self.content, **kwargs)
         if(self.cropWH):
-            ret = resize.cropWH(ret, cropWH)
+            ret = resize.cropWH(ret, self.cropWH)
             return ret
         if(self.stretchWH):
             ret = ret.resize(self.stretchWH, Image.LANCZOS)
@@ -225,27 +225,27 @@ class SizeBox(Widget):
             ret = resize.stretchHeight(ret, self.stretchHeight)
             return ret
         if(self.expandHeight):
-            if(isinstance(expandHeight, tuple)):
-                size, bg = expandHeight
+            if(isinstance(self.expandHeight, tuple)):
+                size, bg = self.expandHeight
                 ret = resize.expandHeight(ret, size, bg)
                 return ret
             else:
-                size = expandHeight
+                size = self.expandHeight
                 bg = kwargs.get("bg") or c_color_TRANSPARENT
                 ret = resize.expandHeight(ret, size, bg)
                 return ret
         if(self.expandWidth):
-            if(isinstance(expandWidth, tuple)):
-                size, bg = expandWidth
+            if(isinstance(self.expandWidth, tuple)):
+                size, bg = self.expandWidth
                 ret = resize.expandWidth(ret, size, bg)
                 return ret
             else:
-                size = expandWidth
+                size = self.expandWidth
                 bg = kwargs.get("bg") or c_color_TRANSPARENT
                 ret = resize.expandWidth(ret, size, bg)
                 return ret
         if(self.expandWH):
-            size, bg = expandWH
+            size, bg = self.expandWH
             if(isinstance(bg, tuple)):
                 ret = resize.expandWH(ret, size, bg)
                 return ret
@@ -258,14 +258,14 @@ class SizeBox(Widget):
 
 class SetFont(Widget):
     # used to pass font attribute down to children widgets
-    def __init__(self, content, font=None, fontSize=None):
+    def __init__(self, content, font=None, fontSize=None, lang=None):
         self.font = font
         self.fontSize = fontSize
         self.content = content
         self.lang = lang
 
     def render(self, **kwargs):
-        kwargs['font'] = self.font or kwargsget('font')
+        kwargs['font'] = self.font or kwargs.get('font')
         kwargs['fontSize'] = self.fontSize or kwargs.get('fontSize')
         kwargs['lang'] = self.lang or kwargs.get('lang')
         return self.content.render(**kwargs)
