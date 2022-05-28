@@ -16,12 +16,12 @@ def profile_renderer():
     def func_introduction(**kwargs):
         return kwargs.get("intro")
     
-    avt=avatarCircle(func_avatar,size=50)
-    name=text(func_name,fontSize=36)
-    row1=row([avt,name],alignY=0.618)
-    row2=richText(func_introduction,300,fontSize=24)
+    avt=AvatarCircle(func_avatar,size=50)
+    name=Text(func_name,fontSize=36)
+    row1=Row([avt,name],alignY=0.618)
+    row2=RichText(func_introduction,300,fontSize=24)
     
-    ret=column([row1,row2],width=300)
+    ret=Column([row1,row2],width=300)
     return ret
 def IM_style_message():
     def func_avatar(**kwargs):
@@ -34,12 +34,12 @@ def IM_style_message():
         def inner(key=key,**kwargs):
             return kwargs.get(key)
         return inner
-    w_avt=avatarCircle(func_avatar,size=100)
-    uname=text(extract_kwa("username"),fontSize=24)
-    message=richText(extract_kwa("message"),alignX=0,alignY=1,fontSize=18,width=300,autoSplit=True,dont_split=True)
+    w_avt=AvatarCircle(func_avatar,size=100)
+    uname=Text(extract_kwa("username"),fontSize=24)
+    message=RichText(extract_kwa("message"),alignX=0,alignY=1,fontSize=18,width=300,autoSplit=True,dont_split=True)
     bub=bubble.default(message,border_size=30)
-    col=column([uname,bub],alignX=0.1)
-    transparent=row([w_avt,col],alignY=0)
+    col=Column([uname,bub],alignX=0.1)
+    transparent=Row([w_avt,col],alignY=0)
     with_bg=compositeBG(transparent,extract_kwa("BG"))
     return transparent,with_bg
 def im_message_example():
@@ -53,12 +53,12 @@ def im_message_example():
     save_example('im_message_exampleA',a)
     save_example('im_message_exampleB',b)
 def setKwargs_example():
-    t=text('content1')
-    a=setKwargs(content=t,fill=c_color_BLUE)
-    r=row([t,a],bg=c_color_WHITE)
+    t=Text('content1')
+    a=SetKwargs(content=t,fill=c_color_BLUE)
+    r=Row([t,a],bg=c_color_WHITE)
     r.render().save(path.join(result_pth,'setKwargs1.png'))
     #wont overwrite bg's own attribute
-    b=setKwargs(content=r,bg=c_color_RED_lighten)
+    b=SetKwargs(content=r,bg=c_color_RED_lighten)
     b.render().save(path.join(result_pth,'setKwargs2.png'))
     #will pass to row renderer because its bg is None
     r.bg=None
@@ -77,16 +77,16 @@ def save_example(name,im):
     p=path.join(result_pth,name+'.png')
     im.save(p)
 def row_example():
-    a=text('content1',fill=c_color_RED)
-    b=text('content2',fill=c_color_GREEN)
-    c=text('content3',fill=c_color_BLUE)
-    r=row([a,b,c])
+    a=Text('content1',fill=c_color_RED)
+    b=Text('content2',fill=c_color_GREEN)
+    c=Text('content3',fill=c_color_BLUE)
+    r=Row([a,b,c])
     save_example('row_example',r.render())
 def callable_content_example():
     def func(**kwargs):
         from datetime import datetime
         return datetime.now().strftime("%Y%m%d%H%M")+"\n,kwargs=%s"%kwargs
-    t=text(func)
+    t=Text(func)
     t.render(bg=c_color_WHITE).save(path.join(result_pth,'callable_content_example1.png'))
     t.render(bg=c_color_BLACK,fill=c_color_WHITE).save(path.join(result_pth,'callable_content_example2.png'))
 def plot_bar_chart(items,title,height=512,name_renderer=None,theme_color=c_color_RED_lighten,name_format=None):
@@ -95,7 +95,7 @@ def plot_bar_chart(items,title,height=512,name_renderer=None,theme_color=c_color
     font_fill=theme_color.darken().darken()
     borderWidth=height//30
     if(name_renderer is None):
-        name_renderer=richText(width=512,contents=lambda **kwargs:[kwargs.get('name')],fontSize=height//15,fill=font_fill)
+        name_renderer=RichText(width=512,contents=lambda **kwargs:[kwargs.get('name')],fontSize=height//15,fill=font_fill)
     ll=theme_color.alterHSV(theme_color.H-20)
     ru=theme_color.alterHSV(theme_color.H+20)
     bar_fill=gradientBox(width=height,ll=ll,ru=ru).render()
@@ -117,11 +117,11 @@ def plot_bar_chart(items,title,height=512,name_renderer=None,theme_color=c_color
     for name,num in _items:
         name=resize.expandWH(name,(name_w,name_h))
         bar=bar_renderer.render(progress=num/mx_num).transpose(Image.ROTATE_90)
-        r=column([bar,name])
+        r=Column([bar,name])
         columns.append(r)
-    bars_renderer=row(columns,alignY=1)
+    bars_renderer=Row(columns,alignY=1)
     title=name_renderer.render(name=title,fontSize=name_renderer.fontSize*2)
-    ret_renderer=column([title,bars_renderer],alignX=0.5,bg=c_color_WHITE,borderWidth=borderWidth)
+    ret_renderer=Column([title,bars_renderer],alignX=0.5,bg=c_color_WHITE,borderWidth=borderWidth)
     return ret_renderer.render()
 def plot_bar_chart_horizontal(items,title,size=512,name_renderer=None,theme_color=c_color_RED_lighten,name_format=None):
     rows=[]
@@ -130,7 +130,7 @@ def plot_bar_chart_horizontal(items,title,size=512,name_renderer=None,theme_colo
     font_fill=theme_color.darken().darken()
     borderWidth=size//30
     if(name_renderer is None):
-        name_renderer=richText(width=size,contents=lambda **kwargs:[kwargs.get('name')],fontSize=size//20,fill=font_fill)
+        name_renderer=RichText(width=size,contents=lambda **kwargs:[kwargs.get('name')],fontSize=size//20,fill=font_fill)
     ll=theme_color.alterHSV(theme_color.H-20)
     ru=theme_color.alterHSV(theme_color.H+20)
     bar_fill=gradientBox(width=size,ll=ll,ru=ru).render()
@@ -152,11 +152,11 @@ def plot_bar_chart_horizontal(items,title,size=512,name_renderer=None,theme_colo
     for name,num in _items:
         name=resize.expandWidth(name,name_w)
         bar=bar_renderer.render(progress=num/mx_num)#.transpose(Image.ROTATE_90)
-        r=row([name,bar])
+        r=Row([name,bar])
         rows.append(r)
     #bars_renderer=column(rows,alignY=1)
     title=name_renderer.render(name=title,fontSize=name_renderer.fontSize*2)
-    ret_renderer=column([title]+rows,alignX=0.5,bg=c_color_WHITE,borderWidth=borderWidth)
+    ret_renderer=Column([title]+rows,alignX=0.5,bg=c_color_WHITE,borderWidth=borderWidth)
     return ret_renderer.render()
 def plot_example(show=False):
     items=[]
