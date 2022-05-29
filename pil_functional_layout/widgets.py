@@ -115,7 +115,7 @@ class Row(Widget):
             width = sWidth+borderWidthX*(1+len(r_contents))
         height = mxHeight+borderWidth*2
 
-        ret = Image.new("RGBA", (width, height), bg.astuple())
+        ret = Image.new("RGBA", (width, height), tuple(bg))
         left = 0
         for idx, i in enumerate(r_contents):
             w, h = i.size
@@ -189,7 +189,7 @@ class Column(Widget):
             height = sHeight+borderWidthY*(1+len(r_contents))
         width = mxWidth+2*borderWidth
 
-        ret = Image.new("RGBA", (width, height), bg.astuple())
+        ret = Image.new("RGBA", (width, height), tuple(bg))
         top = 0
         for idx, i in enumerate(r_contents):
             w, h = i.size
@@ -447,7 +447,7 @@ class RichText(Widget):
         return ret
 
 class Pill(Widget):
-    def __init__(self, contentA, contentB, height=None, colorBorder = None, colorA = None, colorB=None, borderWidth = None):
+    def __init__(self, contentA, contentB, height=None, colorBorder = None, colorA = None, colorB=None, borderWidth = None, borderInner = None, alignY=1):
         self.contentA = contentA
         self.contentB = contentB
         self.height = height
@@ -455,17 +455,23 @@ class Pill(Widget):
         self.colorA = colorA
         self.colorB = colorB
         self.borderWidth = borderWidth
+        self.borderInner = borderInner
+        self.alignY = alignY
     def render(self, **kwargs):
         contentA = _render_content(self.contentA, **kwargs).convert("RGBA")
         contentB = _render_content(self.contentB, **kwargs).convert("RGBA")
         height = None or max(contentA.size[1], contentB.size[1])
         borderWidth = none_or(self.borderWidth, height//6)
+        borderInner = none_or(self.borderInner, borderWidth)
         bw = borderWidth
+        bi = borderInner
         colorA = none_or(self.colorA, c_color_RED)
         colorB = none_or(self.colorB, c_color_WHITE)
         colorBorder = none_or(self.colorBorder, c_color_RED)
 
-        w, h=contentA.size[0]+contentB.size[0]+borderWidth*2+height, height+borderWidth*2
+        w, h=contentA.size[0]+contentB.size[0], height
+        w, h = w+bw*2+height, height+bw*2
+        w, h = w+bi*2, h+bi*2
         ret = Image.new("RGBA", (w, h),(0, )*4)
         dr = ImageDraw.Draw(ret)
 
@@ -473,11 +479,15 @@ class Pill(Widget):
         dr.pieslice((bw, bw, h-bw, h-bw), 90, 270, tuple(colorA))
         dr.pieslice((w-h, 0, w, h), -90, 90, tuple(colorBorder))
         dr.pieslice((w-h+bw, bw, w-bw, h-bw), -90, 90, tuple(colorB))
+
         dr.rectangle((h/2, 0, w-h/2, h),fill=tuple(colorBorder))
-        dr.rectangle((h/2, bw, h/2+contentA.size[0], h-bw),fill=tuple(colorA))
-        dr.rectangle((h/2+contentA.size[0],bw,w-h/2, h-bw),fill=tuple(colorB))
-        ret.paste(contentA, (h//2, bw),mask = contentA)
-        ret.paste(contentB, (h//2+contentA.size[0], bw),mask = contentB)
+        dr.rectangle((h/2, bw, h/2+contentA.size[0]+bi, h-bw),fill=tuple(colorA))
+        dr.rectangle((h/2+contentA.size[0]+bi,bw,w-h/2, h-bw),fill=tuple(colorB))
+
+        top = bw+bi+int((height-contentA.size[1])*self.alignY)
+        ret.paste(contentA, (h//2, top), mask = contentA)
+        top = bw+bi+int((height-contentB.size[1])*self.alignY)
+        ret.paste(contentB, (h//2+contentA.size[0]+bi*2, top), mask = contentB)
         return ret
 class Text(Widget):
     # content should be str or callable object that returns str
@@ -817,5 +827,7 @@ if(False and __name__ == '__main__'):  # test
         pth, 'samples', 'bubble'), border_size=36)
     a.render().show()
 if(__name__ == '__main__'):
-    a = Pill(Text("Foo:"), Text("Bar"), colorBorder = c_color_PINK)
+    a = Pill(Text("嗯喵:", fontSize=72), Text("阿喵喵", fontSize=48), colorBorder = c_color_PINK, borderInner=None)
     a.render().save("./tmp.png")
+    import os
+    os.system("code ./tmp.png")
