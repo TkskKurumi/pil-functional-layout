@@ -446,7 +446,39 @@ class RichText(Widget):
 
         return ret
 
+class Pill(Widget):
+    def __init__(self, contentA, contentB, height=None, colorBorder = None, colorA = None, colorB=None, borderWidth = None):
+        self.contentA = contentA
+        self.contentB = contentB
+        self.height = height
+        self.colorBorder = colorBorder
+        self.colorA = colorA
+        self.colorB = colorB
+        self.borderWidth = borderWidth
+    def render(self, **kwargs):
+        contentA = _render_content(self.contentA, **kwargs).convert("RGBA")
+        contentB = _render_content(self.contentB, **kwargs).convert("RGBA")
+        height = None or max(contentA.size[1], contentB.size[1])
+        borderWidth = none_or(self.borderWidth, height//6)
+        bw = borderWidth
+        colorA = none_or(self.colorA, c_color_RED)
+        colorB = none_or(self.colorB, c_color_WHITE)
+        colorBorder = none_or(self.colorBorder, c_color_RED)
 
+        w, h=contentA.size[0]+contentB.size[0]+borderWidth*2+height, height+borderWidth*2
+        ret = Image.new("RGBA", (w, h),(0, )*4)
+        dr = ImageDraw.Draw(ret)
+
+        dr.pieslice((0, 0, h, h), 90, 270, tuple(colorBorder))
+        dr.pieslice((bw, bw, h-bw, h-bw), 90, 270, tuple(colorA))
+        dr.pieslice((w-h, 0, w, h), -90, 90, tuple(colorBorder))
+        dr.pieslice((w-h+bw, bw, w-bw, h-bw), -90, 90, tuple(colorB))
+        dr.rectangle((h/2, 0, w-h/2, h),fill=tuple(colorBorder))
+        dr.rectangle((h/2, bw, h/2+contentA.size[0], h-bw),fill=tuple(colorA))
+        dr.rectangle((h/2+contentA.size[0],bw,w-h/2, h-bw),fill=tuple(colorB))
+        ret.paste(contentA, (h//2, bw),mask = contentA)
+        ret.paste(contentB, (h//2+contentA.size[0], bw),mask = contentB)
+        return ret
 class Text(Widget):
     # content should be str or callable object that returns str
     def __init__(self, content, font=None, fontSize=None, bg=None, lang=None, fill=None):
@@ -467,10 +499,10 @@ class Text(Widget):
         content = solveCallable(self.content, **kwargs)
 
         fnt = ImageFont.truetype(font, fontSize)
-        size = fnt.getsize_multiline(content)
+        size = fnt.getsize(content)
         ret = Image.new("RGBA", size, tuple(bg))
         dr = ImageDraw.Draw(ret)
-        dr.multiline_text((0, 0), content, font=fnt, fill=tuple(fill))
+        dr.text((0, 0), content, font=fnt, fill=tuple(fill))
         return ret
 
 
@@ -789,15 +821,5 @@ if(False and __name__ == '__main__'):  # test
         pth, 'samples', 'bubble'), border_size=36)
     a.render().show()
 if(__name__ == '__main__'):
-    a = Text('content1', fill=c_color_RED)
-    b = Text('content2', fill=c_color_GREEN)
-    c = Text('content3', fill=c_color_BLUE)
-    r = Row([a, b, c], bg=c_color_WHITE)
-    # r.render().show()
-
-    box = gradientBox(ll=c_color_MIKU, ru=c_color_BLUE_lighten)
-    # box.render().show()
-    r = progressBar(512, progress=0.5, fill=box)
-    r.render().show()
-    r.borderWidth = 0
-    r.render().show()
+    a = Pill(Text("Foo:"), Text("Bar"), colorBorder = c_color_PINK)
+    a.render().save("./tmp.png")
