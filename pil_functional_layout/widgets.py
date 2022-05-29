@@ -562,8 +562,9 @@ class CompositeBG(Widget):
         else:
             bg = _render_content(bg, **kwargs).copy()
         bg = resize.cropWH(bg, content.size)
-        bg.paste(content, mask=content)
-        return bg
+        # bg.paste(content, mask=content)
+        return bg.alpha_composite(content)
+        
 
 class colorBox(Widget):
     def __init__(self, bg, width, height=None):
