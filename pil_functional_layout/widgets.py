@@ -537,7 +537,7 @@ class AvatarCircle(Widget):
         return ret
 
 
-class compositeBG(Widget):
+class CompositeBG(Widget):
     def __init__(self, content, bg=None):
         self.content = content
         self.bg = bg
@@ -554,10 +554,6 @@ class compositeBG(Widget):
         bg = resize.cropWH(bg, content.size)
         bg.paste(content, mask=content)
         return bg
-
-
-compositeAB = compositeBG
-
 
 class colorBox(Widget):
     def __init__(self, bg, width, height=None):
