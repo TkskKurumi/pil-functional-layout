@@ -288,7 +288,7 @@ class _lineFeed:
 
 
 class RichText(Widget):
-    def __init__(self, contents, width, font=None, fontSize=None, bg=None, lang=None, fill=None, alignY=None, alignX=None, dont_split=False, imageLimit=None, horizontalSpacing=None, autoSplit=True):
+    def __init__(self, contents, width, font=None, fontSize=None, bg=None, lang=None, fill=None, alignY=None, alignX=None, dontSplit=False, imageLimit=None, horizontalSpacing=None, autoSplit=True):
         self.width = width
         self.alignX = alignX
         self.alignY = alignY
@@ -297,7 +297,7 @@ class RichText(Widget):
         self.bg = bg
         self.fill = fill
         self.contents = contents
-        self.dont_split = dont_split
+        self.dontSplit = dontSplit
         self.imageLimit = imageLimit
         self.horizontalSpacing = True
         self.autoSplit = autoSplit
@@ -396,7 +396,7 @@ class RichText(Widget):
                 else:
                     raise e
             if(isinstance(content, str)):
-                if(self.dont_split):
+                if(self.dontSplit):
                     for jdx, j in enumerate(content.split('\n')):
                         if(jdx != 0):
                             _contents.append(_lineFeed())
@@ -563,7 +563,8 @@ class CompositeBG(Widget):
             bg = _render_content(bg, **kwargs).copy()
         bg = resize.cropWH(bg, content.size)
         # bg.paste(content, mask=content)
-        return bg.alpha_composite(content)
+        bg.alpha_composite(content)
+        return bg
         
 
 class colorBox(Widget):
@@ -809,9 +810,9 @@ if(False and __name__ == '__main__'):  # test
     # im1=Image.open(r"C:\pilloWidget\samples\avatar.jpg")
     rich_text = richText(['你好', "a very very long string that exceeds the width limit will return line",
                          "\nmulti line \\n\nsupport", im], width=250, alignY=1)
-    splited = "If you want words won't be splited into multi lines, you should mannualy split them and have dont_split parameter true".split()
+    splited = "If you want words won't be splited into multi lines, you should mannualy split them and have dontSplit parameter true".split()
     splited = [i+' ' for idx, i in enumerate(splited)]
-    rich_text1 = richText(splited, dont_split=True, width=250, alignY=1)
+    rich_text1 = richText(splited, dontSplit=True, width=250, alignY=1)
     row1 = row([im]*2+[rich_text], stretchHeight=233, borderWidth=10)
 
     row2 = row([im]*3+[rich_text1], stretchHeight=120, borderWidth=10)
@@ -822,7 +823,7 @@ if(False and __name__ == '__main__'):  # test
     col1.render().show()
 
     bubble_content = richText(['嗯喵啊喵喵\n啊这啊这', im1]+[i+' ' for i in 'this is like some IM software message bubble'.split()],
-                              width=300, fontSize=36, alignY=1, dont_split=True, alignX=0)
+                              width=300, fontSize=36, alignY=1, dontSplit=True, alignX=0)
     # a=bubble.from_dir(bubble_content,r'C:\pilloWidget\samples\bubble',border_size=36)
     a = bubble.from_dir(bubble_content, path.join(
         pth, 'samples', 'bubble'), border_size=36)
