@@ -112,7 +112,10 @@ class Row(Widget):
             if(outer_border):
                 borderWidthX = (width-sWidth)/(1+len(r_contents))
             else:
-                borderWidthX = (width-sWidth)/(len(r_contents)-1)
+                if(len(r_contents)!=1):
+                    borderWidthX = (width-sWidth)/(len(r_contents)-1)
+                else:
+                    borderWidthX = 0 # meaningless
         else:
             borderWidthX = borderWidth
             if(outer_border):
