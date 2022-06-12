@@ -53,7 +53,7 @@ class Row(Widget):
     # if row widget has specified height attribute, it will force its children column layout evenly by setting their height attribute.
     # if row widget has specified width attribute, it will layout children evenly. But won't inherit the attribute to children.
     def __init__(self, contents, bg=None, borderWidth=None, borderColor=None,
-                 stretchHeight=None, expandHeight=None, cropHeight=None, alignY=None, height=None, width=None, stretchWH=None):
+                 stretchHeight=None, expandHeight=None, cropHeight=None, alignY=None, height=None, width=None, stretchWH=None, outer_border=None):
         self.contents = contents
         self.stretchHeight = stretchHeight
         self.expandHeight = expandHeight
@@ -65,7 +65,7 @@ class Row(Widget):
         self.height = height
         self.width = width
         self.stretchWH = stretchWH
-
+        self.outer_border = outer_border
     def get_rendered_contents(self, **kwargs):
         if(self.height):
             for i in self.contents:
@@ -82,7 +82,7 @@ class Row(Widget):
         borderColor = self.borderColor or kwargs.get('borderColor') or bg
         #alignY=self.alignY or kwargs.get('alignY') or 1
         alignY = none_or(self.alignY, kwargs.get('alignY'), 0.5)
-
+        outer_border = none_or(self.outer_border, kwargs.get("outer_border"), False)
         kwargs['bg'] = bg  # inherit settings
         kwargs['borderWidth'] = borderWidth
         kwargs['borderColor'] = borderColor
@@ -109,26 +109,32 @@ class Row(Widget):
             sWidth += w
         if(self.width):
             width = self.width
-            borderWidthX = (width-sWidth)/(1+len(r_contents))
+            if(outer_border):
+                borderWidthX = (width-sWidth)/(1+len(r_contents))
+            else:
+                borderWidthX = (width-sWidth)/(len(r_contents)-1)
         else:
             borderWidthX = borderWidth
-            width = sWidth+borderWidthX*(1+len(r_contents))
-        height = mxHeight+borderWidth*2
+            if(outer_border):
+                width = sWidth+borderWidthX*(1+len(r_contents))
+            else:
+                width = sWidth+borderWidthX*(len(r_contents)-1)
+
+        height = mxHeight+(borderWidth if outer_border else 0)*2
 
         ret = Image.new("RGBA", (width, height), tuple(bg))
-        left = 0
+        left = (borderWidthX if outer_border else 0)
         for idx, i in enumerate(r_contents):
             w, h = i.size
-            left += borderWidthX
-            top = int(borderWidth+(mxHeight-h)*alignY)
+            top = int((borderWidth if outer_border else 0)+(mxHeight-h)*alignY)
             ret.paste(i, box=(int(left), top), mask=i)
-            left += w
+            left += w+borderWidthX
         return ret
 
 
 class Column(Widget):
     def __init__(self, contents, bg=None, borderWidth=None, borderColor=None,
-                 stretchWidth=None, expandWidth=None, cropWidth=None, alignX=None, height=None, width=None, stretchWH=None):
+                 stretchWidth=None, expandWidth=None, cropWidth=None, alignX=None, height=None, width=None, stretchWH=None, outer_border=False):
         self.contents = contents
         self.stretchWidth = stretchWidth
         self.stretchWH = stretchWH
@@ -140,7 +146,7 @@ class Column(Widget):
         self.alignX = alignX
         self.height = height
         self.width = width
-
+        self.outer_border = outer_border
     def get_rendered_contents(self, **kwargs):
         if(self.width):
             for i in self.contents:
@@ -154,6 +160,7 @@ class Column(Widget):
         bg = self.bg or kwargs.get('bg') or c_color_TRANSPARENT
         borderWidth = self.borderWidth or kwargs.get('borderWidth') or 0
         borderColor = self.borderColor or kwargs.get('borderColor') or bg
+        outer_border = none_or(self.outer_border, kwargs.get("outer_border"), False)
         #alignX=self.alignX or kwargs.get('alignX') or 0.5
         alignX = none_or(self.alignX, kwargs.get('alignX'), 0.5)
 
@@ -183,20 +190,25 @@ class Column(Widget):
             sHeight += h
         if(self.height):
             height = self.height
-            borderWidthY = (height-sHeight)/(1+len(r_contents))
+            if(outer_border):
+                borderWidthY = (height-sHeight)/(len(r_contents)+1)
+            else:
+                borderWidthY = (height-sHeight)/(len(r_contents)-1)
         else:
             borderWidthY = borderWidth
-            height = sHeight+borderWidthY*(1+len(r_contents))
-        width = mxWidth+2*borderWidth
+            if(outer_border):
+                height = sHeight+borderWidthY*(1+len(r_contents))
+            else:
+                height = sHeight+borderWidthY*(len(r_contents)-1)
+        width = mxWidth+2*(borderWidth if outer_border else 0)
 
         ret = Image.new("RGBA", (width, height), tuple(bg))
-        top = 0
+        top = borderWidthY if outer_border else 0
         for idx, i in enumerate(r_contents):
             w, h = i.size
-            top += borderWidthY
-            left = int(borderWidth+(mxWidth-w)*alignX)
+            left = int((borderWidth if outer_border else 0)+(mxWidth-w)*alignX)
             ret.paste(i, box=(int(left), int(top)), mask=i)
-            top += h
+            top += h + borderWidthY
         return ret
 
 
@@ -829,7 +841,13 @@ if(False and __name__ == '__main__'):  # test
         pth, 'samples', 'bubble'), border_size=36)
     a.render().show()
 if(__name__ == '__main__'):
-    a = Pill(Text("嗯喵:", fontSize=72), Text("阿喵喵", fontSize=48), colorBorder = c_color_PINK, borderInner=None)
-    a.render().save("./tmp.png")
-    import os
-    os.system("code ./tmp.png")
+    # a = Pill(Text("嗯喵:", fontSize=72), Text("阿喵喵", fontSize=48), colorBorder = c_color_PINK, borderInner=None)
+    
+    
+    A = Text("嗯喵", fontSize=48)
+    B = Text("阿喵喵", fontSize=72)
+    R1 = Row([A, B], outer_border=False, width=512)
+    R2 = Row([A, B], outer_border=True, width=512)
+    C = Column([R1, R2])
+    C.render().save("/tmp/tmp.png")
+    print("/tmp/tmp.png")

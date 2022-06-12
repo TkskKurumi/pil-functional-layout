@@ -9,6 +9,8 @@ setup(
     maintainer="TkskKurumi",
     maintainer_email="zafkielkurumi@gmail.com",
     packages=["pil_functional_layout"],
+    package_data={'pil_functional_layout': ['*.otf',"./samples/bubble/*"]},
+    include_package_data=True,
     install_requires=[
         "pillow"
     ]
