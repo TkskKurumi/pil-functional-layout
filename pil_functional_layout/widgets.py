@@ -196,7 +196,10 @@ class Column(Widget):
             if(outer_border):
                 borderWidthY = (height-sHeight)/(len(r_contents)+1)
             else:
-                borderWidthY = (height-sHeight)/(len(r_contents)-1)
+                if(len(r_contents)!=1):
+                    borderWidthY = (height-sHeight)/(len(r_contents)-1)
+                else:
+                    borderWidthY = 0
         else:
             borderWidthY = borderWidth
             if(outer_border):
