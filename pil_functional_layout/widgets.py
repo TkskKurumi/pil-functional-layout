@@ -1,13 +1,16 @@
 from PIL import Image, ImageFont, ImageDraw
+
 import time
 try:
     from .constants import *
     from . import resize
     from . import mylocale
+    from .get_emoji import _re as emoji_re, get_emoji
 except ImportError:
     from constants import *
     import resize
     import mylocale
+    from get_emoji import _re as emoji_re, get_emoji
 # const:
 # c_color_* for const colors
 
@@ -424,7 +427,17 @@ class RichText(Widget):
                         if(j == '\n'):
                             _contents.append(_lineFeed())
                         else:
-                            _contents.append(j)
+                            if(emoji_re.match(j)):
+                                try:
+                                    code = hex(ord(j)).upper()[2:]
+                                    print("emoji", code)
+                                    im = get_emoji(code).convert("RGBA")
+                                    im = resize.stretchHeight(im, fontSize)
+                                    _contents.append(im)
+                                except Exception:
+                                    _contents.append(j)
+                            else:
+                                _contents.append(j)
             elif(isinstance(content, Image.Image)):
                 '''if(content.width>width):
                     content=resize.stretchWidth(content,width)'''
@@ -815,45 +828,10 @@ def fExtractKwa(key):
     return inner
 
 
-if(False and __name__ == '__main__'):  # test
-    from os import path
-
-    def textFunction(**kwargs):
-        from datetime import datetime
-        return datetime.now().strftime("%Y%m%d\n%H%M\n")+"嗯喵め😀"
-    pth = path.dirname(__file__)
-    im = Image.open(path.join(pth, 'samples', 'landscape.png'))
-    # im=Image.open(r"M:\pic\夜巡\小清水.png")
-    im1 = Image.open(path.join(pth, 'samples', 'avatar.jpg'))
-    # im1=Image.open(r"C:\pilloWidget\samples\avatar.jpg")
-    rich_text = richText(['你好', "a very very long string that exceeds the width limit will return line",
-                         "\nmulti line \\n\nsupport", im], width=250, alignY=1)
-    splited = "If you want words won't be splited into multi lines, you should mannualy split them and have dontSplit parameter true".split()
-    splited = [i+' ' for idx, i in enumerate(splited)]
-    rich_text1 = richText(splited, dontSplit=True, width=250, alignY=1)
-    row1 = row([im]*2+[rich_text], stretchHeight=233, borderWidth=10)
-
-    row2 = row([im]*3+[rich_text1], stretchHeight=120, borderWidth=10)
-    row3 = sizeBox(row2, stretchWH=(300, 30))
-    row4 = row([text(textFunction), avatarCircle(im1, size=200)])
-
-    col1 = column([row1, row2, row3, row4], borderWidth=10, bg=c_color_WHITE)
-    col1.render().show()
-
-    bubble_content = richText(['嗯喵啊喵喵\n啊这啊这', im1]+[i+' ' for i in 'this is like some IM software message bubble'.split()],
-                              width=300, fontSize=36, alignY=1, dontSplit=True, alignX=0)
-    # a=bubble.from_dir(bubble_content,r'C:\pilloWidget\samples\bubble',border_size=36)
-    a = bubble.from_dir(bubble_content, path.join(
-        pth, 'samples', 'bubble'), border_size=36)
-    a.render().show()
-if(__name__ == '__main__'):
-    # a = Pill(Text("嗯喵:", fontSize=72), Text("阿喵喵", fontSize=48), colorBorder = c_color_PINK, borderInner=None)
+if(__name__ == '__main__'):  # test
     
-    
-    A = Text("嗯喵", fontSize=48)
-    B = Text("阿喵喵", fontSize=72)
-    R1 = Row([A, B], outer_border=False, width=512)
-    R2 = Row([A, B], outer_border=True, width=512)
-    C = Column([R1, R2])
-    C.render().save("/tmp/tmp.png")
+    print(hex(ord('👳‍♀️'[0])))
+    RT=RichText("abcd😍👳‍♀️喵喵aabc", width=100, fontSize = 48)
+    im=RT.render()
+    im.save("/tmp/tmp.png")
     print("/tmp/tmp.png")
