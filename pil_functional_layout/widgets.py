@@ -326,6 +326,7 @@ class RichText(Widget):
     def render(self, **kwargs):
         font = self.font or kwargs.get('font') or mylocale.get_default_font()
         fontSize = self.fontSize or kwargs.get('fontSize') or 12
+        fontSize = solveCallable(fontSize, **kwargs)
         bg = self.bg or kwargs.get('bg') or c_color_TRANSPARENT
         fill = self.fill or kwargs.get('fill') or c_color_BLACK
         width = self.width or kwargs.get('width')
@@ -533,6 +534,7 @@ class Text(Widget):
     def render(self, **kwargs):
         font = self.font or kwargs.get('font') or mylocale.get_default_font()
         fontSize = self.fontSize or kwargs.get('fontSize') or 12
+        fontSize = solveCallable(fontSize, **kwargs)
         #lang=self.lang or kwargs.get('lang') or mylocale.get_default_lang()
         bg = self.bg or kwargs.get('bg') or c_color_TRANSPARENT
         fill = self.fill or kwargs.get('fill') or c_color_BLACK
