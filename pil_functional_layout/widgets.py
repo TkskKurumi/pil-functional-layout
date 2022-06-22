@@ -662,7 +662,7 @@ class gradientBox(Widget):
         return ret
 
 
-class addBorder(Widget):
+class AddBorder(Widget):
     def __init__(self, content, borderWidth=None, borderColor=None):
         self.content = content
         self.borderWidth = borderWidth
@@ -683,7 +683,7 @@ class addBorder(Widget):
         ret = Image.new("RGBA", (width, height), tuple(borderColor))
         ret.paste(content, box=(borderWidth, borderWidth))
         return ret
-
+addBorder = AddBorder
 
 class bubble(Widget):
     def __init__(self, content, kwa):
