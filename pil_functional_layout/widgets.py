@@ -1,5 +1,5 @@
 from PIL import Image, ImageFont, ImageDraw
-
+from math import ceil
 import time
 try:
     from .constants import *
@@ -34,6 +34,8 @@ def _render_content(i, **kwargs):
         return i.convert("RGBA")
     elif(isinstance(i, Widget)):
         return i.render(**kwargs)
+    elif(isinstance(i, list)):
+        return [_render_content(j, **kwargs) for j in i]
     elif(i is None):
         return None
     else:
@@ -49,6 +51,82 @@ class Widget:
             ret.append(_render_content(i, **kwargs))
         return ret
     pass
+
+
+class Grid(Widget):
+    def __init__(self, contents, borderWidth=None, outerBorder=None, rankdir=None, bg=None, alignX=None, alignY=None):
+        self.contents = contents
+        self.borderWidth = borderWidth
+        self.outerBorder = outerBorder
+        self.rankdir = rankdir
+        self.bg = bg
+        self.alignX = alignX
+        self.alignY = alignY
+
+    def render(self, **kwargs):
+        contents = super().get_rendered_contents(**kwargs)
+        borderWidth = none_or(self.borderWidth, kwargs.get("borderWidth"))
+        outerBorder = none_or(
+            self.outerBorder, kwargs.get("outerBorder"), False)
+        rankdir = none_or(self.rankdir, kwargs.get("rankdir"), "LR")
+        bg = self.bg or (0, )*4
+        alignX = none_or(self.alignX, 0.5)
+        alignY = none_or(self.alignY, 0.5)
+        if(isinstance(contents[0], list)):
+            columns = len(contents)
+            rows = len(contents[0])
+        else:
+            n = len(contents)
+            columns = int(n**0.5)
+            rows = ceil(n/columns)
+            _contents = [[None for y in range(rows)] for x in range(columns)]
+            for idx, i in enumerate(contents):
+                if(rankdir == "LR"):
+                    x = idx % columns
+                    y = idx//columns
+                else:
+                    y = idx % rows
+                    x = idx//rows
+                _contents[x][y] = i
+            contents = _contents
+            if(borderWidth is None):
+                _w, _h = i.size
+                borderWidth = ((_w*_h)**0.5)//5
+        column_widths = [0 for i in range(columns)]
+        row_heights = [0 for i in range(rows)]
+        for x in range(columns):
+            for y in range(rows):
+                i = contents[x][y]
+                if(i is None):
+                    continue
+                _w, _h = i.size
+                column_widths[x] = max(column_widths[x], _w)
+                row_heights[y] = max(row_heights[y], _h)
+        left = borderWidth if outerBorder else 0
+        lefts = []
+        for i in column_widths:
+            lefts.append(left)
+            left += i+borderWidth
+        top = borderWidth if outerBorder else 0
+        tops = []
+        for i in row_heights:
+            tops.append(top)
+            top += i+borderWidth
+        if(outerBorder):
+            w, h = int(left), int(top)
+        else:
+            w, h = int(left-borderWidth), int(top-borderWidth)
+        ret = Image.new("RGBA", (w, h), bg)
+        for x in range(columns):
+            for y in range(rows):
+                i = contents[x][y]
+                if(i is None):
+                    continue
+                _w, _h = i.size
+                top = tops[y]+(row_heights[y]-_h)*alignY
+                left = lefts[x]+(column_widths[x]-_w)*alignX
+                ret.paste(i, box=(int(left), int(top)))
+        return ret
 
 
 class Row(Widget):
@@ -69,6 +147,7 @@ class Row(Widget):
         self.width = width
         self.stretchWH = stretchWH
         self.outer_border = outer_border
+
     def get_rendered_contents(self, **kwargs):
         if(self.height):
             for i in self.contents:
@@ -85,7 +164,8 @@ class Row(Widget):
         borderColor = self.borderColor or kwargs.get('borderColor') or bg
         #alignY=self.alignY or kwargs.get('alignY') or 1
         alignY = none_or(self.alignY, kwargs.get('alignY'), 0.5)
-        outer_border = none_or(self.outer_border, kwargs.get("outer_border"), False)
+        outer_border = none_or(
+            self.outer_border, kwargs.get("outer_border"), False)
         kwargs['bg'] = bg  # inherit settings
         kwargs['borderWidth'] = borderWidth
         kwargs['borderColor'] = borderColor
@@ -115,10 +195,10 @@ class Row(Widget):
             if(outer_border):
                 borderWidthX = (width-sWidth)/(1+len(r_contents))
             else:
-                if(len(r_contents)!=1):
+                if(len(r_contents) != 1):
                     borderWidthX = (width-sWidth)/(len(r_contents)-1)
                 else:
-                    borderWidthX = 0 # meaningless
+                    borderWidthX = 0  # meaningless
         else:
             borderWidthX = borderWidth
             if(outer_border):
@@ -153,6 +233,7 @@ class Column(Widget):
         self.height = height
         self.width = width
         self.outer_border = outer_border
+
     def get_rendered_contents(self, **kwargs):
         if(self.width):
             for i in self.contents:
@@ -166,7 +247,8 @@ class Column(Widget):
         bg = self.bg or kwargs.get('bg') or c_color_TRANSPARENT
         borderWidth = self.borderWidth or kwargs.get('borderWidth') or 0
         borderColor = self.borderColor or kwargs.get('borderColor') or bg
-        outer_border = none_or(self.outer_border, kwargs.get("outer_border"), False)
+        outer_border = none_or(
+            self.outer_border, kwargs.get("outer_border"), False)
         #alignX=self.alignX or kwargs.get('alignX') or 0.5
         alignX = none_or(self.alignX, kwargs.get('alignX'), 0.5)
 
@@ -199,7 +281,7 @@ class Column(Widget):
             if(outer_border):
                 borderWidthY = (height-sHeight)/(len(r_contents)+1)
             else:
-                if(len(r_contents)!=1):
+                if(len(r_contents) != 1):
                     borderWidthY = (height-sHeight)/(len(r_contents)-1)
                 else:
                     borderWidthY = 0
@@ -300,8 +382,6 @@ class SetKwargs(Widget):
     def render(self, **kwargs):
         kwargs.update(self.kwargs)
         return _render_content(self.content, **kwargs)
-
-
 
 
 class _lineFeed:
@@ -478,8 +558,9 @@ class RichText(Widget):
 
         return ret
 
+
 class Pill(Widget):
-    def __init__(self, contentA, contentB, height=None, colorBorder = None, colorA = None, colorB=None, borderWidth = None, borderInner = None, alignY=1):
+    def __init__(self, contentA, contentB, height=None, colorBorder=None, colorA=None, colorB=None, borderWidth=None, borderInner=None, alignY=1):
         self.contentA = contentA
         self.contentB = contentB
         self.height = height
@@ -489,6 +570,7 @@ class Pill(Widget):
         self.borderWidth = borderWidth
         self.borderInner = borderInner
         self.alignY = alignY
+
     def render(self, **kwargs):
         contentA = _render_content(self.contentA, **kwargs).convert("RGBA")
         contentB = _render_content(self.contentB, **kwargs).convert("RGBA")
@@ -501,10 +583,10 @@ class Pill(Widget):
         colorB = none_or(self.colorB, c_color_WHITE)
         colorBorder = none_or(self.colorBorder, c_color_RED)
 
-        w, h=contentA.size[0]+contentB.size[0], height
+        w, h = contentA.size[0]+contentB.size[0], height
         w, h = w+bw*2+height, height+bw*2
         w, h = w+bi*2, h+bi*2
-        ret = Image.new("RGBA", (w, h),(0, )*4)
+        ret = Image.new("RGBA", (w, h), (0, )*4)
         dr = ImageDraw.Draw(ret)
 
         dr.pieslice((0, 0, h, h), 90, 270, tuple(colorBorder))
@@ -512,15 +594,19 @@ class Pill(Widget):
         dr.pieslice((w-h, 0, w, h), -90, 90, tuple(colorBorder))
         dr.pieslice((w-h+bw, bw, w-bw, h-bw), -90, 90, tuple(colorB))
 
-        dr.rectangle((h/2, 0, w-h/2, h),fill=tuple(colorBorder))
-        dr.rectangle((h/2, bw, h/2+contentA.size[0]+bi, h-bw),fill=tuple(colorA))
-        dr.rectangle((h/2+contentA.size[0]+bi,bw,w-h/2, h-bw),fill=tuple(colorB))
+        dr.rectangle((h/2, 0, w-h/2, h), fill=tuple(colorBorder))
+        dr.rectangle(
+            (h/2, bw, h/2+contentA.size[0]+bi, h-bw), fill=tuple(colorA))
+        dr.rectangle((h/2+contentA.size[0]+bi,
+                     bw, w-h/2, h-bw), fill=tuple(colorB))
 
         top = bw+bi+int((height-contentA.size[1])*self.alignY)
-        ret.paste(contentA, (h//2, top), mask = contentA)
+        ret.paste(contentA, (h//2, top), mask=contentA)
         top = bw+bi+int((height-contentB.size[1])*self.alignY)
-        ret.paste(contentB, (h//2+contentA.size[0]+bi*2, top), mask = contentB)
+        ret.paste(contentB, (h//2+contentA.size[0]+bi*2, top), mask=contentB)
         return ret
+
+
 class Text(Widget):
     # content should be str or callable object that returns str
     def __init__(self, content, font=None, fontSize=None, bg=None, lang=None, fill=None):
@@ -598,7 +684,7 @@ class CompositeBG(Widget):
         # bg.paste(content, mask=content)
         bg.alpha_composite(content)
         return bg
-        
+
 
 class colorBox(Widget):
     def __init__(self, bg, width, height=None):
@@ -683,7 +769,10 @@ class AddBorder(Widget):
         ret = Image.new("RGBA", (width, height), tuple(borderColor))
         ret.paste(content, box=(borderWidth, borderWidth))
         return ret
+
+
 addBorder = AddBorder
+
 
 class bubble(Widget):
     def __init__(self, content, kwa):
@@ -831,9 +920,20 @@ def fExtractKwa(key):
 
 
 if(__name__ == '__main__'):  # test
-    
-    print(hex(ord('👳‍♀️'[0])))
-    RT=RichText("abcd😍👳‍♀️喵喵aabc", width=100, fontSize = 48)
-    im=RT.render()
-    im.save("/tmp/tmp.png")
-    print("/tmp/tmp.png")
+    import random
+    t0 = Text(lambda **kwargs: kwargs['text'], fontSize=32)
+    t1 = Text(lambda **kwargs: kwargs['text'], fontSize=18)
+    contents = []
+    for i in range(32):
+        contents.append(random.choice([t0, t1]).render(text=str(i)))
+    grid = Grid(contents)
+    im = grid.render(rankdir="LR")
+    im1 = grid.render(rankdir="TB")
+
+    pth = "/tmp/a.png"
+    im.save(pth)
+    print(pth)
+
+    pth = "/tmp/b.png"
+    im1.save(pth)
+    print(pth)
