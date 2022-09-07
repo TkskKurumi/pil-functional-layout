@@ -4,7 +4,7 @@ class color:
 		if(isinstance(x,color)):
 			return x
 		elif(isinstance(x,tuple)):
-			return color.RGBA(*x)
+			return color(*x)
 		else:
 			raise Exception("Cannot convert %s to color"%x)
 	

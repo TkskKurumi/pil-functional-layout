@@ -125,7 +125,7 @@ class Grid(Widget):
                 _w, _h = i.size
                 top = tops[y]+(row_heights[y]-_h)*alignY
                 left = lefts[x]+(column_widths[x]-_w)*alignX
-                ret.paste(i, box=(int(left), int(top)))
+                ret.paste(i, box=(int(left), int(top)), mask=i)
         return ret
 
 
@@ -920,20 +920,10 @@ def fExtractKwa(key):
 
 
 if(__name__ == '__main__'):  # test
-    import random
-    t0 = Text(lambda **kwargs: kwargs['text'], fontSize=32)
-    t1 = Text(lambda **kwargs: kwargs['text'], fontSize=18)
-    contents = []
-    for i in range(32):
-        contents.append(random.choice([t0, t1]).render(text=str(i)))
-    grid = Grid(contents)
-    im = grid.render(rankdir="LR")
-    im1 = grid.render(rankdir="TB")
+    contents = ["foo","\n", "bar"]
+    rt = RichText(contents, fill=(255,)*4, width=512)
+    im = rt.render()
 
     pth = "/tmp/a.png"
     im.save(pth)
-    print(pth)
-
-    pth = "/tmp/b.png"
-    im1.save(pth)
     print(pth)
