@@ -54,7 +54,7 @@ class Widget:
 
 
 class Grid(Widget):
-    def __init__(self, contents, borderWidth=None, outerBorder=None, rankdir=None, bg=None, alignX=None, alignY=None):
+    def __init__(self, contents, borderWidth=None, outerBorder=None, rankdir=None, bg=None, alignX=None, alignY=None, autoAspectRatio=1):
         self.contents = contents
         self.borderWidth = borderWidth
         self.outerBorder = outerBorder
@@ -62,7 +62,7 @@ class Grid(Widget):
         self.bg = bg
         self.alignX = alignX
         self.alignY = alignY
-
+        self.autoAspectRatio = autoAspectRatio
     def render(self, **kwargs):
         contents = super().get_rendered_contents(**kwargs)
         borderWidth = none_or(self.borderWidth, kwargs.get("borderWidth"))
@@ -77,7 +77,7 @@ class Grid(Widget):
             rows = len(contents[0])
         else:
             n = len(contents)
-            columns = int(n**0.5)
+            columns = int((n*self.autoAspectRatio)**0.5)
             rows = ceil(n/columns)
             _contents = [[None for y in range(rows)] for x in range(columns)]
             for idx, i in enumerate(contents):
@@ -408,11 +408,11 @@ class RichText(Widget):
         fontSize = self.fontSize or kwargs.get('fontSize') or 12
         fontSize = solveCallable(fontSize, **kwargs)
         bg = self.bg or kwargs.get('bg') or c_color_TRANSPARENT
+        bg = solveCallable(fill, **kwargs)
         fill = self.fill or kwargs.get('fill') or c_color_BLACK
+        fill = solveCallable(fill, **kwargs)
         width = self.width or kwargs.get('width')
-        #alignX=self.alignX or kwargs.get('alignX') or 0.5
         alignX = none_or(self.alignX, kwargs.get('alignX'), 0.1)
-        #alignY=self.alignY or kwargs.get('alignY') or 0.5
         alignY = none_or(self.alignY, kwargs.get('alignY'), 1)
         imageLimit = self.imageLimit or kwargs.get(
             'imageLimit') or (width/c_golden_ratio, fontSize*4)
