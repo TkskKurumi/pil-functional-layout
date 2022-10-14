@@ -50,7 +50,8 @@ class Widget:
         for i in self.contents:
             ret.append(_render_content(i, **kwargs))
         return ret
-    pass
+    def __call__(self, **kwargs):
+        self.render(**kwargs)
 
 
 class Grid(Widget):
@@ -408,7 +409,7 @@ class RichText(Widget):
         fontSize = self.fontSize or kwargs.get('fontSize') or 12
         fontSize = solveCallable(fontSize, **kwargs)
         bg = self.bg or kwargs.get('bg') or c_color_TRANSPARENT
-        bg = solveCallable(fill, **kwargs)
+        bg = solveCallable(bg, **kwargs)
         fill = self.fill or kwargs.get('fill') or c_color_BLACK
         fill = solveCallable(fill, **kwargs)
         width = self.width or kwargs.get('width')
