@@ -51,7 +51,7 @@ class Widget:
             ret.append(_render_content(i, **kwargs))
         return ret
     def __call__(self, **kwargs):
-        self.render(**kwargs)
+        return self.render(**kwargs)
 
 
 class Grid(Widget):
